@@ -10,6 +10,15 @@ import java.util.List
 import org.gradle.api.internal.plugins.DefaultJavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 
+/**
+ * <p>
+ * Script template model that wraps <code>JavaAppStartScriptGenerationDetails</code>
+ * specifications as well as a generic map for key-value bindings.
+ * </p>
+ * 
+ * @author thinh ho
+ *
+ */
 class ExtendedJavaStartScriptGenerationDetails implements JavaAppStartScriptGenerationDetails {
    /**
     * The Gradle default details definition.

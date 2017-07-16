@@ -6,36 +6,39 @@
 package kkdt.gradle.api.task.scripts
 
 import org.gradle.api.Transformer
-import org.gradle.api.internal.plugins.DefaultTemplateBasedStartScriptGenerator
 import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
-import org.gradle.api.internal.resources.CharSourceBackedTextResource
 import org.gradle.api.resources.TextResource
-import org.gradle.internal.impldep.com.google.common.base.Charsets
+import org.gradle.internal.io.IoUtils
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
+import org.gradle.jvm.application.scripts.TemplateBasedScriptGenerator
 import org.gradle.util.TextUtil
 
-import com.google.common.io.CharSource
+import groovy.text.SimpleTemplateEngine
+import groovy.text.Template
 
-class ExternalTemplateStartScriptGenerator extends DefaultTemplateBasedStartScriptGenerator {
-   
-   protected static TextResource utf8FilePathResource(final File file) {
-      return new CharSourceBackedTextResource("Filepath resource '" + file.absolutePath + "'", new CharSource() {
-         @Override
-         public Reader openStream() throws IOException {
-            if(!file.exists()) {
-               throw new IllegalStateException("Could not find file path resource " + file.absolutePath);
-            }
-            InputStream stream = new FileInputStream(file);
-            return new BufferedReader(new InputStreamReader(stream, Charsets.UTF_8));
-         }
-      });
-   }
-   
+/**
+ * <p>
+ * Unix-based start script generator that is modeled off the Gradle's
+ * <code>DefaultTemplateBasedStartScriptGenerator</code> but takes into account
+ * the additional details/bindings when invoking Groovy's <code>SimpleTemplateEngine</code>.
+ * </p>
+ * 
+ * @author thinh ho
+ *
+ */
+class ExternalTemplateStartScriptGenerator implements TemplateBasedScriptGenerator {
+   TextResource template;
+   String lineSeparator;
    Transformer<Map<String, String>, JavaAppStartScriptGenerationDetails> bindingFactory;
    
-   public ExternalTemplateStartScriptGenerator(File fileTemplate) {
-      super(TextUtil.getUnixLineSeparator(), StartScriptTemplateBindingFactory.unix(), utf8FilePathResource(fileTemplate));
-      bindingFactory = StartScriptTemplateBindingFactory.unix();
+   @Override
+   public TextResource getTemplate() {
+      return template;
+   }
+
+   @Override
+   public void setTemplate(TextResource template) {
+      this.template = template;
    }
    
    @Override
@@ -48,7 +51,23 @@ class ExternalTemplateStartScriptGenerator extends DefaultTemplateBasedStartScri
           String generated = generateStartScriptContentFromTemplate(binding);
           destination.write(generated);
       } catch (Exception e) {
-          throw new UncheckedIOException(e);
+          throw new IOException(e);
       }
+   }
+   
+   private String generateStartScriptContentFromTemplate(final Map<String, String> binding) {
+      return IoUtils.get(template.asReader(), new Transformer<String, Reader>() {
+         @Override
+         public String transform(Reader reader) {
+            try {
+               SimpleTemplateEngine engine = new SimpleTemplateEngine();
+               Template template = engine.createTemplate(reader);
+               String output = template.make(binding).toString();
+               return TextUtil.convertLineSeparators(output, lineSeparator);
+            } catch (IOException e) {
+               throw e;
+            }
+         }
+      });
    }
 }
