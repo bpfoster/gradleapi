@@ -27,7 +27,8 @@ import kkdt.gradle.api.task.scripts.ExternalTemplateStartScriptGenerator
  * <ol>
  * <li>unixScriptTemplate : The file path to the unix script template (i.e. /opt/templates/unixScript.txt)</li>
  * <li>extendedDetails : A map of bindings from the template</li>
- * <li>scriptRelativePath : The relative path where generated scripts will be placed (i.e. bin/scriptName)</li>
+ * <li>scriptRelativePath : The relative path where generated scripts will be placed (default 'bin', i.e. bin/scriptName)</li>
+ * <li>libRelativePath : The relative path where dependencies will be placed (default 'lib', i.e. lib/jarfile)</li>
  * <li>includeWindowsScript : Determine whether or not to include the Windows script generation</li>
  * </ol>
  * @author thinh ho
@@ -40,6 +41,7 @@ class ExtendedCreateStartScripts extends CreateStartScripts {
     */
    def extendedDetails = [:];
    def scriptRelativePath;
+   def libRelativePath;
    def includeWindowsScript = false;
    
    @Override
@@ -69,10 +71,10 @@ class ExtendedCreateStartScripts extends CreateStartScripts {
       
       // generate the scripts
       generator.generateUnixScript(unixScript);
-      logger.info("UNIX script generated");
+      logger.info("UNIX script generated " + unixScript);
       if(includeWindowsScript) {
          generator.generateWindowsScript(windowsScript);
-         logger.info("Windows script generated");
+         logger.info("Windows script generated " + windowsScript);
       } else {
          logger.info("Windows script generation skipped");
       }
@@ -90,7 +92,7 @@ class ExtendedCreateStartScripts extends CreateStartScripts {
          mainClassName,
          CollectionUtils.toStringList(defaultJvmOpts),
          CollectionUtils.toStringList(getRelativeClasspath()),
-         scriptRelativePath, // generator.setScriptRelPath("bin/" + getUnixScript().getName());
+         scriptRelativePath == null ? 'lib' + File.separator + unixScript.name : scriptRelativePath,
          null);
       logger.info('Generator set with extended details: ' + extendedDetails)
       scriptDetails.extendedDetails = extendedDetails;
@@ -102,7 +104,7 @@ class ExtendedCreateStartScripts extends CreateStartScripts {
       return Iterables.transform(getClasspath().getFiles(), new Function<File, String>() {
           @Override
           public String apply(File input) {
-              return "lib/" + input.getName();
+              return libRelativePath == null ? 'lib' + File.separator + input.name : libRelativePath + File.separator + input.name;
           }
       });
    }
