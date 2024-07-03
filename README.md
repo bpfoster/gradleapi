@@ -20,14 +20,13 @@ An extension of the Gradle [CreateStartScripts](https://docs.gradle.org/current/
 
 ```
 task createHelloWorld(type: kkdt.gradle.api.task.ExtendedCreateStartScripts) {
-   mainClassName = "kkdt.sample.webboot.HelloWorld"
+   mainClass = "kkdt.sample.webboot.HelloWorld"
    applicationName = "helloworld"
    defaultJvmOpts = ["-Dhello=world"]
    outputDir = new File(project.buildDir, 'scripts')
-   classpath = jar.outputs.files + project.configurations.runtime
+   classpath = jar.outputs.files + project.configurations.runtimeClasspath
    unixScriptTemplate = file('run/scriptTemplate.txt')
    scriptRelativePath = 'scripts' // default to 'bin' if omitted
-   libRelativePath = 'libraries' // default to 'lib' if omitted
    includeWindowsScript = true // default to 'false' if omitted
    extendedDetails = [
       requiredApplicationArguments : "required=name foo=bar",

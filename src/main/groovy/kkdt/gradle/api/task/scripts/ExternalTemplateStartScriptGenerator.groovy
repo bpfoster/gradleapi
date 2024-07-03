@@ -5,16 +5,17 @@
  */
 package kkdt.gradle.api.task.scripts
 
+import groovy.text.SimpleTemplateEngine
+import groovy.text.Template
 import org.gradle.api.Transformer
-import org.gradle.api.internal.plugins.StartScriptTemplateBindingFactory
 import org.gradle.api.resources.TextResource
+import org.gradle.internal.InternalTransformer
 import org.gradle.internal.io.IoUtils
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.TemplateBasedScriptGenerator
-import org.gradle.util.TextUtil
 
-import groovy.text.SimpleTemplateEngine
-import groovy.text.Template
+import javax.annotation.Nullable
+import java.util.regex.Pattern
 
 /**
  * <p>
@@ -56,18 +57,23 @@ class ExternalTemplateStartScriptGenerator implements TemplateBasedScriptGenerat
    }
    
    private String generateStartScriptContentFromTemplate(final Map<String, String> binding) {
-      return IoUtils.get(template.asReader(), new Transformer<String, Reader>() {
+      return IoUtils.get(template.asReader(), new InternalTransformer<String, Reader>() {
          @Override
          public String transform(Reader reader) {
             try {
                SimpleTemplateEngine engine = new SimpleTemplateEngine();
                Template template = engine.createTemplate(reader);
                String output = template.make(binding).toString();
-               return TextUtil.convertLineSeparators(output, lineSeparator);
+               return convertLineSeparators(output, lineSeparator);
             } catch (IOException e) {
                throw e;
             }
          }
       });
+   }
+
+   private static String convertLineSeparators(@Nullable String str, String sep) {
+      def pattern = Pattern.compile("\r\n|\r|\n")
+      return str == null ? null : pattern.matcher(str).replaceAll(sep);
    }
 }

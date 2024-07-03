@@ -5,8 +5,6 @@
  */
 package kkdt.gradle.api.task.scripts
 
-import java.util.List
-
 import org.gradle.api.internal.plugins.DefaultJavaAppStartScriptGenerationDetails
 import org.gradle.jvm.application.scripts.JavaAppStartScriptGenerationDetails
 
@@ -27,7 +25,7 @@ class ExtendedJavaStartScriptGenerationDetails implements JavaAppStartScriptGene
    /**
     * An extended details is a map of already transformed key-value pairs.
     */
-   def extendedDetails = [:];
+   Map<String, String> extendedDetails = [:];
    
    @Override
    public String getAppNameSystemProperty() {
@@ -43,7 +41,12 @@ class ExtendedJavaStartScriptGenerationDetails implements JavaAppStartScriptGene
    public List<String> getClasspath() {
       return details.getClasspath();
    }
-   
+
+   @Override
+   List<String> getModulePath() {
+      return details.getModulePath();
+   }
+
    @Override
    public List<String> getDefaultJvmOpts() {
       return details.getDefaultJvmOpts();
